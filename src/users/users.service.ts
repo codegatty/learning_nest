@@ -1,21 +1,9 @@
-import { Injectable } from '@nestjs/common';
-type TUser={
-    id:string,
-    name:string,
-    email:string,
-    userType:'INTERN'|'ENGINEER'|'ADMIN',
-    age:number
-}
+import { Injectable,NotFoundException } from '@nestjs/common';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
-type TUpdateUser={
-    name?:string,
-    email?:string,
-    userType?:'INTERN'|'ENGINEER'|'ADMIN',
-    age?:number
-}
 @Injectable()
 export class UsersService {
-
 private dummyData=[
         {"id": '1', "name": "User_1", "email": "user1@example.com", "userType": "INTERN", "age": 33},
         {"id": '2', "name": "User_2", "email": "user2@example.com", "userType": "ADMIN", "age": 31},
@@ -30,30 +18,33 @@ private dummyData=[
     ]
 
 findAll(role?:'INTERN'|'ENGINEER'|'ADMIN'){
-if(role)
-    return this.dummyData.filter(user => user.userType === role);
-else
+if(role){
+    const users= this.dummyData.filter(user => user.userType === role);
+    if(users.length === 0){
+        throw new NotFoundException("No users found with the specified role !")
+    }
+    return users
+}else
     return this.dummyData;
 }
-
 findOne(id:string){
-        return this.dummyData.find(user => user.id === id);
+        const user=this.dummyData.find(user => user.id === id);
+        if(!user){
+throw new NotFoundException("User not found !")
+        }
+        return user;
 }
-
-createUser(user:TUser){
-    this.dummyData.push(user);
-    return user;
+createUser(createUserDto:CreateUserDto){
+    this.dummyData.push(createUserDto)
+    return createUserDto
 }
-
-updateUser(id:string,user:TUpdateUser){
- this.dummyData=this.dummyData.map(eUser => eUser.id === id ? { ...eUser, ...user } : eUser);
+updateUser(id:string,updateUserDto:UpdateUserDto){
+ this.dummyData=this.dummyData.map(eUser => eUser.id === id ? { ...eUser, ...updateUserDto } : eUser);
  return this.findOne(id);
 }
-
 deleteUser(id:string){
     const deletedUser=this.findOne(id)
     this.dummyData=this.dummyData.filter(eUser => eUser.id !== id);
     return deletedUser
 }
-
 }
